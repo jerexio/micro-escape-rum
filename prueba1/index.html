@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCESO AL ARCHIVO DE VALDOCCO</title>
+    <style>
+        /* ESTILOS VISUALES (CSS) */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace; /* Fuente tipo archivo/hacker */
+        }
+
+        .bg {
+            /* Imagen de fondo */
+            background-image: url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?q=80&w=2256&auto=format&fit=crop');
+            height: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            
+            /* Flexbox para centrar el contenido */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .panel-control {
+            background-color: rgba(0, 0, 0, 0.85); /* Fondo negro semitransparente */
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border: 2px solid #555;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #dcdcdc;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 18px;
+            width: 80%;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: #222;
+            border: 1px solid #444;
+            color: #0f0; /* Texto verde terminal */
+            text-transform: uppercase;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 16px;
+            background-color: #444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background-color: #666;
+        }
+
+        #mensaje-exito {
+            display: none; /* Oculto por defecto */
+            margin-top: 20px;
+        }
+
+        .ganaste-texto {
+            color: #00ff00;
+            font-size: 40px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff00;
+            animation: parpadeo 1.5s infinite;
+        }
+
+        .error-texto {
+            color: #ff3333;
+            margin-top: 10px;
+            display: none;
+        }
+
+        @keyframes parpadeo {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg">
+        <div class="panel-control" id="panel">
+            <h1>Acceso al Archivo de Valdocco</h1>
+            
+            <div id="formulario">
+                <p>Ingrese la clave de seguridad:</p>
+                <input type="text" id="inputCodigo" placeholder="_ _ _ _ _ _" autocomplete="off">
+                <br>
+                <button onclick="verificarCodigo()">INGRESAR</button>
+                <p id="errorMsg" class="error-texto">ACCESO DENEGADO</p>
+            </div>
+
+            <div id="mensaje-exito">
+                <div class="ganaste-texto">GANASTE</div>
+                <p>Acceso concedido al sistema.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* LÓGICA (JAVASCRIPT) */
+        function verificarCodigo() {
+            // Obtener el valor escrito por el usuario
+            var input = document.getElementById("inputCodigo").value;
+            var mensajeError = document.getElementById("errorMsg");
+            var bloqueFormulario = document.getElementById("formulario");
+            var bloqueExito = document.getElementById("mensaje-exito");
+
+            // Convertir a minúsculas para que "CODIGO", "Codigo" y "codigo" funcionen igual
+            if (input.toLowerCase().trim() === "carisma") {
+                // Si es correcto:
+                bloqueFormulario.style.display = "none"; // Oculta el input
+                bloqueExito.style.display = "block";  
+            } else {
+                // Si es incorrecto:
+                mensajeError.style.display = "block";
+                
+                // Efecto visual: limpiar el input
+                document.getElementById("inputCodigo").value = "";
+                document.getElementById("inputCodigo").focus();
+            }
+        }
+
+        // Permitir presionar "Enter" para enviar
+        document.getElementById("inputCodigo").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                verificarCodigo();
+            }
+        });
+    </script>
+
+</body>
+</html>
