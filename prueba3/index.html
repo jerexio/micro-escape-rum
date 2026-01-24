@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVALUACIÓN DE ENTORNOS</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f2f2f2;
+            overflow: hidden;
+        }
+
+        /* Contenedor principal */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Área de la pregunta (Parte superior) */
+        .question-area {
+            flex: 1; 
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        h2 {
+            font-size: 32px;
+            color: #333;
+            max-width: 900px;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .contador {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Área de respuestas (Parte inferior - Grilla 2x2) */
+        .answers-grid {
+            height: 50%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 5px;
+            padding: 5px;
+            background-color: #ccc;
+        }
+
+        .btn-option {
+            border: none;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .btn-option:active {
+            transform: scale(0.98);
+        }
+
+        /* Colores */
+        .btn-casa { background-color: #e21b3c; }    
+        .btn-escuela { background-color: #1368ce; } 
+        .btn-patio { background-color: #d89e00; }   
+        .btn-iglesia { background-color: #26890c; } 
+
+        .icon { margin-right: 15px; font-size: 35px; }
+
+        /* Pantalla de Feedback */
+        #feedback-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            font-weight: bold;
+            color: white;
+            z-index: 100;
+        }
+        
+        .correct-bg { background-color: rgba(38, 137, 12, 0.95); }
+        .wrong-bg { background-color: rgba(226, 27, 60, 0.95); }
+
+        /* Pantalla Final */
+        #final-screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background-color: #333;
+            color: white;
+            text-align: center;
+        }
+
+        .btn-next-level {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 24px;
+            background-color: #fff;
+            color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn-next-level:hover { background-color: #ddd; }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="game-ui">
+        <div class="question-area">
+            <div class="contador" id="contador-texto">Aciertos: 0 / 3</div>
+            <h2 id="question-text">Cargando...</h2>
+        </div>
+
+        <div class="answers-grid">
+            <button class="btn-option btn-casa" onclick="checkAnswer('CASA')">
+                <span class="icon">🏠</span> CASA
+            </button>
+            <button class="btn-option btn-escuela" onclick="checkAnswer('ESCUELA')">
+                <span class="icon">📚</span> ESCUELA
+            </button>
+            <button class="btn-option btn-patio" onclick="checkAnswer('PATIO')">
+                <span class="icon">⚽</span> PATIO
+            </button>
+            <button class="btn-option btn-iglesia" onclick="checkAnswer('IGLESIA')">
+                <span class="icon">⛪</span> IGLESIA
+            </button>
+        </div>
+    </div>
+
+    <div id="final-screen">
+        <h1 style="font-size: 50px;">¡PRUEBA COMPLETADA!</h1>
+        <p style="font-size: 24px;">Has reconstruido el ambiente salesiano correctamente.</p>
+        <a href="final.html" class="btn-next-level">CONTINUAR</a>
+    </div>
+
+    <div id="feedback-overlay"></div>
+
+    <script>
+        // 1. BANCO DE PREGUNTAS
+        const bancoPreguntas = [
+            {
+                texto: "“Un joven no quiere venir más porque siente que no encaja.”",
+                respuestaCorrecta: "CASA"
+            },
+            {
+                texto: "“Un chico se manda una macana y nadie lo vuelve a mirar igual.”",
+                respuestaCorrecta: "ESCUELA"
+            },
+            {
+                texto: "“El grupo se junta solo para actividades, pero no se conoce.”",
+                respuestaCorrecta: "PATIO"
+            },
+            {
+                texto: "“Llega un chico nuevo al patio y nadie se acerca a saludarlo porque todos están en su grupito de siempre.”",
+                respuestaCorrecta: "IGLESIA"
+            },
+            {
+                texto: "“Un joven deja de venir porque no tiene dinero para pagar el campamento y le da vergüenza pedir beca.”",
+                respuestaCorrecta: "CASA"
+            },
+            {
+                texto: "“A un chico lo tildaron de 'problemático' hace dos años y, aunque cambió, los animadores lo siguen tratando con desconfianza.”",
+                respuestaCorrecta: "ESCUELA"
+            },
+            {
+                texto: "“Un joven entra y sale del oratorio sin que ningún adulto o animador note su presencia ni le pregunte cómo está.”",
+                respuestaCorrecta: "CASA"
+            },
+            {
+                texto: "“Un animador reprende a un chico a los gritos delante de todos, humillándolo en lugar de corregirlo al oído.”",
+                respuestaCorrecta: "ESCUELA"
+            },
+            {
+                texto: "“El grupo nota que el coordinador tiene 'preferidos' a los que les perdona todo, mientras que con otros es inflexible.”",
+                respuestaCorrecta: "ESCUELA"
+            },
+            {
+                texto: "“Un chico intenta contar un problema personal, pero el animador está mirando el celular o pensando en la siguiente actividad.”",
+                respuestaCorrecta: "CASA"
+            },
+            {
+                texto: "“Un joven confiesa una duda de fe y, en lugar de ser acogido, recibe un sermón moralista que lo aleja.”",
+                respuestaCorrecta: "IGLESIA"
+            },
+            {
+                texto: "“Un animador está agotado y triste, pero nadie le pregunta qué le pasa porque se asume que 'él siempre puede con todo'.”",
+                respuestaCorrecta: "CASA"
+            },
+            {
+                texto: "“Se hacen juegos increíbles y grandes decoraciones, pero se termina el día sin haber hecho ni una breve oración.”",
+                respuestaCorrecta: "IGLESIA"
+            },
+            {
+                texto: "“Los chicos ven que sus animadores hablan de Dios el sábado, pero en la semana actúan de forma opuesta a lo que predican.”",
+                respuestaCorrecta: "IGLESIA"
+            },
+            {
+                texto: "“La misa es tan rígida y lejana a la realidad de los chicos que sienten que Dios no tiene nada que ver con sus vidas cotidianas.”",
+                respuestaCorrecta: "IGLESIA"
+            },
+            {
+                texto: "“Se obliga a los chicos a ir a la capilla como castigo o requisito, haciendo que vean la fe como una carga.”",
+                respuestaCorrecta: "IGLESIA"
+            },
+            {
+                texto: "“Los chicos sienten que pierden el tiempo porque los animadores llegan sin preparar nada y se nota que improvisan.”",
+                respuestaCorrecta: "ESCUELA"
+            },
+            {
+                texto: "“Los jóvenes mayores no dejan espacio ni responsabilidades a los nuevos líderes porque no quieren perder su lugar.”",
+                respuestaCorrecta: "ESCUELA"
+            },
+            {
+                texto: "“Un joven propone una idea nueva para mejorar el grupo y es rechazado automáticamente por los coordinadores antiguos.”",
+                respuestaCorrecta: "ESCUELA"
+            },
+            {
+                texto: "“En lugar de colaborar, los distintos grupos compiten entre sí agresivamente para ver quién es el mejor.”",
+                respuestaCorrecta: "PATIO"
+            }
+
+        ];
+
+        // VARIABLES DE ESTADO
+        let preguntasPendientes = []; // Copia para ir eliminando las acertadas
+        let preguntaActual = null;
+        let aciertos = 0;
+        const metaAciertos = 5;
+
+        // INICIAR
+        window.onload = function() {
+            // Creamos una copia del banco original
+            preguntasPendientes = [...bancoPreguntas];
+            cargarSiguientePregunta();
+        };
+
+        function cargarSiguientePregunta() {
+            // Actualizar contador
+            document.getElementById("contador-texto").innerText = `Aciertos: ${aciertos} / ${metaAciertos}`;
+
+            // Elegir una pregunta al azar de las pendientes
+            if (preguntasPendientes.length > 0) {
+                const indiceAleatorio = Math.floor(Math.random() * preguntasPendientes.length);
+                preguntaActual = preguntasPendientes[indiceAleatorio];
+                
+                // Mostrar texto
+                document.getElementById("question-text").innerText = preguntaActual.texto;
+            }
+        }
+
+        function checkAnswer(seleccion) {
+            const overlay = document.getElementById("feedback-overlay");
+
+            if (seleccion === preguntaActual.respuestaCorrecta) {
+                // --- CORRECTO ---
+                aciertos++;
+                
+                // Eliminar la pregunta actual de la lista de pendientes para que no repita
+                const index = preguntasPendientes.indexOf(preguntaActual);
+                if (index > -1) {
+                    preguntasPendientes.splice(index, 1);
+                }
+
+                // Feedback visual
+                mostrarFeedback("¡CORRECTO!", "correct-bg");
+
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                    
+                    // Verificar si ganó o sigue jugando
+                    if (aciertos === metaAciertos) {
+                        finalizarJuego();
+                    } else {
+                        cargarSiguientePregunta();
+                    }
+                }, 1500);
+
+            } else {
+                // --- INCORRECTO ---
+                // No sumamos aciertos. No borramos la pregunta (volverá a salir luego o ahora)
+                mostrarFeedback("INCORRECTO", "wrong-bg");
+
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                    // Volvemos a cargar aleatoriamente (puede salir la misma u otra pendiente)
+                    cargarSiguientePregunta(); 
+                }, 1000);
+            }
+        }
+
+        function mostrarFeedback(texto, claseColor) {
+            const overlay = document.getElementById("feedback-overlay");
+            overlay.className = claseColor;
+            overlay.innerText = texto;
+            overlay.style.display = "flex";
+        }
+
+        function finalizarJuego() {
+            document.getElementById("game-ui").style.display = "none";
+            document.getElementById("final-screen").style.display = "flex";
+        }
+    </script>
+
+</body>
+</html>

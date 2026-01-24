@@ -114,8 +114,7 @@
             </div>
 
             <div id="mensaje-exito">
-                <div class="ganaste-texto">GANASTE</div>
-                <p>Acceso concedido al sistema.</p>
+                <div class="ganaste-texto">Pregunta por los tres pilares...</div>
             </div>
         </div>
     </div>
@@ -135,10 +134,7 @@
                 bloqueFormulario.style.display = "none"; // Oculta el input
                 bloqueExito.style.display = "block";  
             } else {
-                // Si es incorrecto:
                 mensajeError.style.display = "block";
-                
-                // Efecto visual: limpiar el input
                 document.getElementById("inputCodigo").value = "";
                 document.getElementById("inputCodigo").focus();
             }

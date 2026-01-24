@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESTAURANDO EL ESPÍRITU</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Georgia', serif; /* Fuente más clásica/literaria */
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .bg {
+            /* Fondo tipo escritorio antiguo o textura de papel oscuro */
+            background-image: url('https://images.unsplash.com/photo-1535905557558-afc4877a26fc?q=80&w=2574&auto=format&fit=crop');
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background-color: rgba(30, 30, 30, 0.95);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            width: 90%;
+            max-width: 700px;
+            border-top: 5px solid #d4af37; /* Dorado */
+            position: relative;
+        }
+
+        h2 {
+            text-align: center;
+            color: #d4af37;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .instrucciones {
+            text-align: center;
+            font-style: italic;
+            color: #aaa;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        /* Área de visualización de la frase actual */
+        .tarjeta-frase {
+            background-color: #2b2b2b;
+            padding: 20px;
+            border: 1px solid #444;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff4444; /* Rojo indicando error/corrupción */
+        }
+
+        .label-sistema {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #ff4444;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background-color: #111;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 15px;
+            font-size: 18px;
+            font-family: 'Courier New', Courier, monospace;
+            resize: none;
+            box-sizing: border-box; /* Para que el padding no rompa el ancho */
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+
+        /* Controles de navegación */
+        .controles {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #666;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-guardar {
+            background-color: #d4af37;
+            color: #000;
+        }
+        .btn-guardar:hover {
+            background-color: #c4a030;
+        }
+
+        .indicador-pag {
+            font-family: monospace;
+            color: #888;
+        }
+
+        #mensaje-guardado {
+            text-align: center;
+            color: #44ff44;
+            font-size: 14px;
+            height: 20px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        /* Botón final (oculto hasta completar) */
+        #btn-finalizar {
+            display: block;
+            margin: 30px auto 0 auto;
+            background-color: #28a745;
+            padding: 15px 30px;
+            font-size: 18px;
+            text-decoration: none;
+            text-align: center;
+            color: white;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="bg">
+        <div class="container">
+            <h2>Archivo Corrupto Detectado</h2>
+            <p class="instrucciones">
+                ¿Estas frases contradicen el Espíritu Salesiano?
+            </p>
+
+            <div id="area-trabajo">
+                <div class="tarjeta-frase">
+                    <span class="label-sistema">TEXTO ACTUAL (CORRUPTO):</span>
+                    <input type="hidden" id="indice-actual">
+                    <p id="texto-original" style="font-style: italic; margin-top: 5px;">...</p>
+                </div>
+
+                <span class="label-sistema" style="color: #d4af37;">TU CORRECCIÓN:</span>
+                <textarea id="texto-usuario" placeholder="Escribe aquí la versión salesiana correcta..."></textarea>
+            </div>
+
+            <div id="mensaje-guardado">Cambios guardados</div>
+
+            <div class="controles">
+                <button onclick="cambiarFrase(-1)" id="btn-prev">&laquo; Anterior</button>
+                <span class="indicador-pag" id="indicador">1 / 4</span>
+                <button class="btn-guardar" onclick="guardarCorreccion()">GUARDAR CAMBIOS</button>
+                <button onclick="cambiarFrase(1)" id="btn-next">Siguiente &raquo;</button>
+            </div>
+
+            <a href="final.html" id="btn-finalizar">FINALIZAR MISIÓN</a>
+        </div>
+    </div>
+
+    <script>
+        // 1. DATOS INICIALES (Las frases "Anti-Salesianas")
+        const frasesBase = [
+            "En el oratorio, cuando un joven se equivoca, se lo expone delante de todos.",
+            "Las normas se imponen sin explicación.",
+            "La autoridad se ejerce desde la distancia.",
+            "La fe se vive solo como obligación."
+        ];
+
+        let indiceActual = 0;
+        let datosUsuario = [];
+
+        // 2. INICIALIZACIÓN
+        window.onload = function() {
+            cargarDatos();
+            mostrarFrase(0);
+        };
+
+        // Carga datos de LocalStorage o inicia con arrays vacíos si es la primera vez
+        function cargarDatos() {
+            const guardado = localStorage.getItem('salesianos_escape_room_v1');
+            
+            if (guardado) {
+                datosUsuario = JSON.parse(guardado);
+            } else {
+                // Si no hay datos, iniciamos el array con cadenas vacías
+                datosUsuario = new Array(frasesBase.length).fill("");
+            }
+        }
+
+        // Muestra la frase correspondiente al índice
+        function mostrarFrase(indice) {
+            indiceActual = indice;
+
+            // Actualizar textos en pantalla
+            document.getElementById('texto-original').innerText = `"${frasesBase[indice]}"`;
+            document.getElementById('texto-usuario').value = datosUsuario[indice];
+            document.getElementById('indicador').innerText = `${indice + 1} / ${frasesBase.length}`;
+
+            // Manejo de botones Prev/Next
+            document.getElementById('btn-prev').disabled = (indice === 0);
+            document.getElementById('btn-next').disabled = (indice === frasesBase.length - 1);
+        }
+
+        // Navegación
+        function cambiarFrase(direccion) {
+            // Antes de cambiar, guardamos automáticamente lo que haya escrito (opcional, pero mejora UX)
+            guardarCorreccion(false); // false para no mostrar alerta visual exagerada
+
+            let nuevoIndice = indiceActual + direccion;
+            if (nuevoIndice >= 0 && nuevoIndice < frasesBase.length) {
+                mostrarFrase(nuevoIndice);
+            }
+        }
+
+        // Guardar en LocalStorage
+        function guardarCorreccion(mostrarNotificacion = true) {
+            const textoEscrito = document.getElementById('texto-usuario').value;
+            
+            // Guardamos en el array en memoria
+            datosUsuario[indiceActual] = textoEscrito;
+
+            // Guardamos en el navegador (Persistencia)
+            localStorage.setItem('salesianos_escape_room_v1', JSON.stringify(datosUsuario));
+
+            if (mostrarNotificacion) {
+                const msg = document.getElementById('mensaje-guardado');
+                msg.style.opacity = '1';
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                }, 2000);
+            }
+        }
+    </script>
+
+</body>
+</html>
